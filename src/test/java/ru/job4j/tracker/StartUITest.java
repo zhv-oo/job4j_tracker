@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class StartUITest {
 
@@ -162,5 +165,86 @@ public class StartUITest {
                         + "0. Exit" + ln
                 )
         );
+    }
+
+    @Test
+    public void whenReplaceItemWithMock() {
+        Output out = new StubOutput();
+        Tracker tracker = new Tracker();
+        tracker.add(new Item("Replaced item"));
+        String replacedName = "New item name";
+        ReplaceAction rep = new ReplaceAction(out);
+
+        Input input = mock(Input.class);
+
+        when(input.askInt(any(String.class))).thenReturn(1);
+        when(input.askStr(any(String.class))).thenReturn(replacedName);
+
+        rep.execute(input, tracker);
+
+        String ln = System.lineSeparator();
+        assertThat(out.toString(), is("=== Edit item ===" + ln + "Edit item is done." + ln));
+        assertThat(tracker.findAll().get(0).getName(), is(replacedName));
+    }
+
+    @Test
+    public void whenDeleteItemWithMock() {
+        Output out = new StubOutput();
+        Tracker tracker = new Tracker();
+        Item item = new Item("new item");
+        tracker.add(item);
+        DeleteAction del = new DeleteAction(out);
+
+        Input input = mock(Input.class);
+
+        when(input.askInt(any(String.class))).thenReturn(1);
+        when(input.askStr(any(String.class))).thenReturn("Item deleted");
+
+        del.execute(input, tracker);
+        String ln = System.lineSeparator();
+        assertThat(out.toString(), is("=== Delete Items by ID ====" + ln + "Item deleted" + ln));
+    }
+
+    @Test
+    public void whenFindByIdWithMock() {
+        Output out = new StubOutput();
+        Tracker tracker = new Tracker();
+        Item item = new Item("new item");
+        tracker.add(item);
+        FindByIdAction find = new FindByIdAction(out);
+
+        Input input = mock(Input.class);
+
+        when(input.askInt(any(String.class))).thenReturn(1);
+        when(input.askStr(any(String.class))).thenReturn("new item");
+
+        find.execute(input, tracker);
+        String ln = System.lineSeparator();
+        assertThat(getInfoWithoutDate(out.toString()), is("=== Find Items by ID ====" + ln + item.getName() + ln));
+    }
+
+    @Test
+    public void whenFindByNameWithMock() {
+        Output out = new StubOutput();
+        Tracker tracker = new Tracker();
+        Item item = new Item("found item");
+        tracker.add(item);
+        FindByNameAction find = new FindByNameAction(out);
+
+        Input input = mock(Input.class);
+
+        when(input.askInt(any(String.class))).thenReturn(1);
+        when(input.askStr(any(String.class))).thenReturn("found item");
+
+        find.execute(input, tracker);
+        String ln = System.lineSeparator();
+        assertThat(getInfoWithoutDate(out.toString()), is("=== Find Items by name ====" + ln + item.getName() + ln));
+    }
+
+    private String getInfoWithoutDate(String inStr) {
+        String ln = System.lineSeparator();
+        String[] rsl = inStr.toString().split(ln);
+        String nameItem = rsl[1].split("'")[1];
+        return rsl[0] + ln + nameItem + ln;
     }
 }
